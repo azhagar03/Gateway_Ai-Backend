@@ -17,7 +17,7 @@ const Admin = require("./Models/Admin");
 
 const app = express();
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin:["http://localhost:3000","https://gatewayai.in"]
 }));
 app.use(express.json());
 
