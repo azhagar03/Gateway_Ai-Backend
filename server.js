@@ -16,9 +16,28 @@ const PaymentsRoutes = require("./routes/PaymentsRoutes");
 const Admin = require("./Models/Admin");
 
 const app = express();
-app.use(cors({
-  origin:["http://localhost:3000","https://gatewayai.in"]
-}));
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://gatewayai.in",
+  "https://www.gatewayai.in",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ CORS blocked origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
