@@ -1,7 +1,8 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const Order = require("../Models/Orders");
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -43,20 +44,12 @@ exports.createOrder = async (req, res) => {
 
 const sendAdminNotification = async (order) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.ADMIN_EMAIL,
-        pass: process.env.ADMIN_EMAIL_PASS,
-      },
-    });
-
     const itemsList = order.items
       .map((i) => `${i.productName} x${i.qty} - ₹${i.price * i.qty}`)
       .join("\n");
 
-    await transporter.sendMail({
-      from: `"${order.firstName} ${order.lastName}" <${order.email}>`, 
+    const response = await resend.emails.send({
+      from: "Gateway AI <onboarding@resend.dev>", 
       to: process.env.ADMIN_EMAIL,
       subject: `🛒 New Order (${order.paymentStatus}) - ${order.firstName} ${order.lastName}`,
       text: `
@@ -72,8 +65,10 @@ Items:
 ${itemsList}
       `,
     });
+
+    console.log("✅ Admin email sent via Resend:", response);
   } catch (err) {
-    console.error("Error sending admin email:", err);
+    console.error("❌ Error sending admin email:", err);
   }
 };
 
